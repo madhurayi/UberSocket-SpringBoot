@@ -28,7 +28,7 @@
         connect();
     })
     function connect(){
-        const socket=new SockJS("http://localhost:8080/ws")
+        const socket=new SockJS("http://localhost:3008/ws")
         stompClient=Stomp.over(socket);
         stompClient.connect({},function(){
             console.log("connected");
@@ -47,6 +47,16 @@
                 const li=document.createElement("li");
                 li.textContent=`${msg.name}: ${msg.timestamp} - ${msg.message}`;
                 document.getElementById("list").appendChild(li);
+            });
+            stompClient.subscribe("/topic/rideRequest",function(data){
+                const bookingId=JSON.parse(data.body).bookingId;
+                const response=confirm(`You have a new ride request from passenger: ${JSON.parse(data.body).passengerId} Do you want to accept it?`);
+                console.log("response",response);
+                if(response==true){
+                    const userId=prompt("Enter driverId:");
+                    stompClient.send(`/app/rideResponse/${userId}`,{},JSON.stringify({response,bookingId}));
+                }
+
             });
         })
     }
